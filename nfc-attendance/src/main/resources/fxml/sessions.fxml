@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.nfc.attendance.controller.SessionController"
+      spacing="20" style="-fx-padding: 20;">
+
+    <HBox spacing="20" style="-fx-border-color: #555; -fx-border-radius: 5; -fx-padding: 15;">
+        <VBox spacing="10" prefWidth="300">
+            <Label text="Start New Session" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+
+            <Label text="Subject:"/>
+            <TextField fx:id="subjectField" promptText="Enter subject name"/>
+
+            <Label text="Section:"/>
+            <TextField fx:id="sectionField" promptText="Enter section name"/>
+
+            <HBox spacing="10">
+                <Button fx:id="startButton" text="Start Session" style="-fx-padding: 10 30;" onAction="#onStartSessionClicked"/>
+                <Button fx:id="endButton" text="End Session" style="-fx-padding: 10 30;" onAction="#onEndSessionClicked" disable="true"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <Label text="Active Session" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+            <Label fx:id="activeSessionLabel" text="No active session"/>
+            <Label fx:id="sessionIdLabel" text=""/>
+        </VBox>
+    </HBox>
+
+    <Label text="Session History" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="sessionTable" prefHeight="300">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="subjectColumn" text="Subject" prefWidth="150"/>
+            <TableColumn fx:id="sectionColumn" text="Section" prefWidth="100"/>
+            <TableColumn fx:id="startTimeColumn" text="Start Time" prefWidth="180"/>
+            <TableColumn fx:id="endTimeColumn" text="End Time" prefWidth="180"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+        </columns>
+    </TableView>
+
+    <Label fx:id="statusLabel" style="-fx-text-fill: #aaa;"/>
+</VBox>
+

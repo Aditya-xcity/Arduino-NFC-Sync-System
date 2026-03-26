@@ -1,0 +1,171 @@
+/* ===== NFC Attendance Pro — Dark Theme ===== */
+/* Merged: Main project's dark.css + extensions for all FXML views */
+
+.root {
+    -fx-background-color: #121212;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.label {
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 13px;
+}
+
+/* Buttons */
+.button {
+    -fx-background-color: #1f1f1f;
+    -fx-text-fill: white;
+    -fx-border-color: #444;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #2a2a2a;
+    -fx-border-color: #666;
+}
+
+.button:pressed {
+    -fx-background-color: #333;
+}
+
+/* Text Fields */
+.text-field, .password-field {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #444;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-prompt-text-fill: #777;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #5c9ced;
+}
+
+/* ComboBox */
+.combo-box {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #444;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: #e0e0e0;
+    -fx-background-color: #1e1e1e;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #1e1e1e;
+}
+
+.combo-box-popup .list-view .list-cell:filled:selected {
+    -fx-background-color: #333;
+}
+
+/* ListView */
+.list-view {
+    -fx-background-color: #1a1a1a;
+    -fx-control-inner-background: #1a1a1a;
+    -fx-border-color: #333;
+}
+
+.list-view .list-cell {
+    -fx-text-fill: #e0e0e0;
+    -fx-background-color: #1a1a1a;
+}
+
+.list-view .list-cell:filled:selected {
+    -fx-background-color: #2a4a7a;
+    -fx-text-fill: white;
+}
+
+/* TableView */
+.table-view {
+    -fx-background-color: #1a1a1a;
+    -fx-border-color: #333;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #222;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #ccc;
+    -fx-font-weight: bold;
+}
+
+.table-view .table-row-cell {
+    -fx-background-color: #1a1a1a;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: #1e1e1e;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #2a4a7a;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #ddd;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: #777;
+}
+
+/* ScrollBar */
+.scroll-bar {
+    -fx-background-color: #1a1a1a;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #444;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #555;
+}
+
+/* Separator */
+.separator .line {
+    -fx-border-color: #333;
+}
+
+/* Hyperlink */
+.hyperlink {
+    -fx-text-fill: #5c9ced;
+}
+
+.hyperlink:visited {
+    -fx-text-fill: #5c9ced;
+}
+
+/* Dialog */
+.dialog-pane {
+    -fx-background-color: #1e1e1e;
+}
+
+.dialog-pane .label {
+    -fx-text-fill: #e0e0e0;
+}
+
+.dialog-pane .button-bar .btn {
+    -fx-background-color: #2a2a2a;
+    -fx-text-fill: white;
+}
+
+/* StackPane content area */
+.stack-pane {
+    -fx-background-color: #121212;
+}
+
+/* Alert */
+.alert .dialog-pane {
+    -fx-background-color: #1e1e1e;
+}
+

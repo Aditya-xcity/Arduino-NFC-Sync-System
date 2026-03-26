@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.nfc.attendance.controller.AttendanceController"
+      spacing="15" style="-fx-padding: 20;">
+
+    <!-- Session Info + Stats -->
+    <HBox spacing="20" style="-fx-border-color: #555; -fx-padding: 15; -fx-border-radius: 5;">
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <Label text="Attendance Tracking" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+            <Label fx:id="sessionInfoLabel" text="No active session"/>
+        </VBox>
+
+        <VBox spacing="10">
+            <Label text="Session Stats" style="-fx-font-weight: bold;"/>
+            <HBox spacing="20">
+                <VBox>
+                    <Label text="Present" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="presentLabel" text="0" style="-fx-font-size: 24; -fx-text-fill: #4caf50;"/>
+                </VBox>
+                <VBox>
+                    <Label text="Absent" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="absentLabel" text="0" style="-fx-font-size: 24; -fx-text-fill: #f44336;"/>
+                </VBox>
+                <VBox>
+                    <Label text="Total" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="totalLabel" text="0" style="-fx-font-size: 24;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <!-- Scan Controls + Webcam -->
+    <HBox spacing="20">
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <HBox spacing="10">
+                <Button fx:id="startScanButton" text="Start Scan" onAction="#onStartScanClicked" style="-fx-padding: 8 20;"/>
+                <Button fx:id="stopScanButton" text="Stop Scan" onAction="#onStopScanClicked" style="-fx-padding: 8 20;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Generate Report" onAction="#onGenerateReportClicked" style="-fx-padding: 8 20;"/>
+                <Button text="Refresh" onAction="#onRefreshClicked" style="-fx-padding: 8 20;"/>
+            </HBox>
+            <ListView fx:id="attendanceList" prefHeight="120"/>
+        </VBox>
+
+        <VBox spacing="5">
+            <Label text="Live Preview" style="-fx-font-weight: bold;"/>
+            <ImageView fx:id="webcamView" fitWidth="250" fitHeight="200" preserveRatio="true"/>
+        </VBox>
+    </HBox>
+
+    <!-- Attendance Table -->
+    <Label text="Attendance Records" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+    <TableView fx:id="attendanceTable" prefHeight="250">
+        <columns>
+            <TableColumn fx:id="rollNoColumn" text="Roll No" prefWidth="100"/>
+            <TableColumn fx:id="nameColumn" text="Student Name" prefWidth="200"/>
+            <TableColumn fx:id="timestampColumn" text="Timestamp" prefWidth="180"/>
+            <TableColumn fx:id="photoColumn" text="Photo" prefWidth="80"/>
+        </columns>
+    </TableView>
+
+    <Label fx:id="statusLabel" style="-fx-text-fill: #aaa;"/>
+</VBox>
+

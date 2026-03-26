@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.nfc.attendance.controller.StudentManagementController"
+      spacing="20" style="-fx-padding: 20;">
+
+    <!-- Header -->
+    <HBox spacing="10">
+        <Label text="Student Management" style="-fx-font-size: 20; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Add Student" onAction="#onAddStudentClicked" style="-fx-padding: 8 20;"/>
+    </HBox>
+
+    <!-- Filters -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Filter by Section:"/>
+        <ComboBox fx:id="sectionComboBox" prefWidth="200"/>
+        <Button text="Search" onAction="#onSearchClicked" style="-fx-padding: 6 16;"/>
+        <Button text="Show All" onAction="#onShowAllClicked" style="-fx-padding: 6 16;"/>
+    </HBox>
+
+    <!-- Student Table -->
+    <TableView fx:id="studentTable" prefHeight="400">
+        <columns>
+            <TableColumn fx:id="rollNoColumn" text="Roll No" prefWidth="100"/>
+            <TableColumn fx:id="nameColumn" text="Name" prefWidth="200"/>
+            <TableColumn fx:id="sectionColumn" text="Section" prefWidth="100"/>
+            <TableColumn fx:id="subjectColumn" text="Subject" prefWidth="150"/>
+            <TableColumn fx:id="nfcUidColumn" text="NFC UID" prefWidth="150"/>
+        </columns>
+    </TableView>
+
+    <!-- Status -->
+    <Label fx:id="statusLabel" style="-fx-text-fill: #aaa;"/>
+</VBox>
+

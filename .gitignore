@@ -1,0 +1,93 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+.DS_Store
+.classpath
+.project
+.settings/
+bin/
+.metadata/
+
+# Compiled files
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+.venv
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+attendance.db
+
+# Generated files
+GeneratedFiles/
+generated-sources/
+
+# Logs
+*.log
+logs/
+
+# Runtime files
+running.txt
+
+# OS
+Thumbs.db
+.DS_Store
+.directory
+
+# Application data
+attendance_data/
+!/attendance_data/.gitkeep
+data/reports/
+!/data/reports/.gitkeep
+data/photos/
+!/data/photos/.gitkeep

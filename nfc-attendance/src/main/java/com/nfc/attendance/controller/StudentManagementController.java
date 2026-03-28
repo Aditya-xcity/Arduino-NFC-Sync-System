@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.fazecast.jSerialComm.SerialPort;
 import com.nfc.attendance.model.Student;
+import com.nfc.attendance.nfc.ArduinoController;
 import com.nfc.attendance.nfc.NFCCardReader;
 import com.nfc.attendance.service.StudentService;
 
@@ -38,6 +40,62 @@ public class StudentManagementController {
     @FXML private TableColumn<Student, String> nfcUidColumn;
     @FXML private ComboBox<String> sectionComboBox;
     @FXML private Label statusLabel;
+
+    // Arduino Test Dialog
+    @FXML
+    public void onTestArduinoClicked() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Test Arduino Buzzer/LED");
+        dialog.setHeaderText("Test Arduino connection and buzzer/light");
+
+        ComboBox<String> portCombo = new ComboBox<>();
+        portCombo.setPrefWidth(180);
+        Button refreshButton = new Button("Refresh");
+        Button testButton = new Button("Test Buzzer/LED");
+        Label resultLabel = new Label();
+        resultLabel.setStyle("-fx-text-fill: #666;");
+
+        Runnable refreshPorts = () -> {
+            portCombo.getItems().clear();
+            SerialPort[] ports = SerialPort.getCommPorts();
+            for (SerialPort p : ports) {
+                portCombo.getItems().add(p.getSystemPortName());
+            }
+            if (!portCombo.getItems().isEmpty()) {
+                portCombo.getSelectionModel().select(0);
+            }
+        };
+        refreshPorts.run();
+        refreshButton.setOnAction(e -> refreshPorts.run());
+
+        testButton.setOnAction(e -> {
+            String port = portCombo.getValue();
+            if (port == null || port.isEmpty()) {
+                resultLabel.setText("Select a COM port first.");
+                return;
+            }
+            try {
+                ArduinoController.getInstance().setPortName(port);
+                ArduinoController.getInstance().triggerScan();
+                resultLabel.setText("Signal sent to " + port + ". Check buzzer/LED.");
+            } catch (Exception ex) {
+                resultLabel.setText("Failed: " + ex.getMessage());
+            }
+        });
+
+        HBox portBox = new HBox(8, new Label("COM Port:"), portCombo, refreshButton, testButton);
+        portBox.setStyle("-fx-padding: 8 0 8 0;");
+
+        GridPane content = new GridPane();
+        content.setVgap(10);
+        content.setHgap(10);
+        content.add(portBox, 0, 0);
+        content.add(resultLabel, 0, 1);
+
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
+    }
 
     private StudentService studentService;
     private ObservableList<Student> studentList;

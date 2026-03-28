@@ -40,6 +40,8 @@
             <HBox spacing="10">
                 <Button fx:id="startScanButton" text="Start Scan" onAction="#onStartScanClicked" style="-fx-padding: 8 20;"/>
                 <Button fx:id="stopScanButton" text="Stop Scan" onAction="#onStopScanClicked" style="-fx-padding: 8 20;"/>
+                <Label text="Camera:" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="cameraSelector" prefWidth="220" promptText="Select camera"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Generate Report" onAction="#onGenerateReportClicked" style="-fx-padding: 8 20;"/>
                 <Button text="Refresh" onAction="#onRefreshClicked" style="-fx-padding: 8 20;"/>

@@ -205,7 +205,17 @@ Main tables:
 
 ---
 
-## 🤝 Contributing
+## � Testing and Validation Status
+
+| Test Type | Status (Pass/Fail) | Notes |
+| --- | --- | --- |
+| NFC Card Detection | Pass | Arduino reader successfully detects NFC card taps with LED/buzzer feedback |
+| Database Connection | Pass | SQLite database initializes and performs read/write operations without errors |
+| Login Authentication | Pass | Secure login system validates credentials and enforces role-based access control |
+
+---
+
+## �🤝 Contributing
 
 Want to improve this project?
 

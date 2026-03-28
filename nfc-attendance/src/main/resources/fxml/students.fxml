@@ -11,6 +11,7 @@
     <HBox spacing="10">
         <Label text="Student Management" style="-fx-font-size: 20; -fx-font-weight: bold;"/>
         <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Test Arduino" onAction="#onTestArduinoClicked" style="-fx-padding: 8 20;"/>
         <Button text="Add Student" onAction="#onAddStudentClicked" style="-fx-padding: 8 20;"/>
     </HBox>
 

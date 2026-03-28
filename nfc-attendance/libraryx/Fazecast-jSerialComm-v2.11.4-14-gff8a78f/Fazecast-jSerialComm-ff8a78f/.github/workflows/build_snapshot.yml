@@ -1,0 +1,78 @@
+name: Generate Snapshot
+permissions:
+  actions: read
+  contents: write
+  deployments: write
+  pages: write
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publishsnapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Get latest commit SHA
+        id: gitsha
+        run: echo "sha=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_OUTPUT
+
+      - name: Get source code version number
+        id: gitversion
+        run: echo "version=$(grep -o "versionString = [^, ;]*" src/main/java/com/fazecast/jSerialComm/SerialPort.java | grep -o "\".*\"" | grep -o [^\"].*[^\"])" >> $GITHUB_OUTPUT
+
+      - name: Update library version string
+        run: |
+          sed -i "s/versionString = [^, ;]*/versionString = \"${{ steps.gitversion.outputs.version }}-${{ steps.gitsha.outputs.sha }}-SNAPSHOT\"/g" src/main/java/com/fazecast/jSerialComm/SerialPort.java
+          sed -i "s/nativeLibraryVersion\[\] = [^, ;]*/nativeLibraryVersion\[\] = \"${{ steps.gitversion.outputs.version }}-${{ steps.gitsha.outputs.sha }}-SNAPSHOT\"/g" src/main/c/Posix/SerialPort_Posix.c
+          sed -i "s/nativeLibraryVersion\[\] = [^, ;]*/nativeLibraryVersion\[\] = \"${{ steps.gitversion.outputs.version }}-${{ steps.gitsha.outputs.sha }}-SNAPSHOT\"/g" src/main/c/Windows/SerialPort_Windows.c
+
+      - name: Build native libraries using Docker toolchain
+        uses: addnab/docker-run-action@v3
+        with:
+          image: fazecast/jserialcomm:builder
+          options: --user root --privileged --rm -v ${{ github.workspace }}:/home/toolchain/jSerialComm
+          run: /home/toolchain/compile.sh libs
+
+      - name: Set up Java build environment
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+          cache: maven
+          server-id: central
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: SIGN_KEY_PASS
+
+      - name: Build and publish SNAPSHOT using Maven
+        run: ./mvnw versions:set -DnewVersion=${{ steps.gitversion.outputs.version }}-SNAPSHOT && ./mvnw clean deploy -DskipTests
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSS_SONATYPE_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSS_SONATYPE_PASSWORD }}
+          SIGN_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          SIGN_KEY_PASS: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+
+      - name: Check out Wiki source data
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: markdown
+
+      - name: Update and publish Wiki SNAPSHOT link
+        run: |
+          xmlResult=$(wget -qO- https://central.sonatype.com/repository/maven-snapshots/com/fazecast/jSerialComm/${{ steps.gitversion.outputs.version }}-SNAPSHOT/maven-metadata.xml)
+          snapshot=$(echo $xmlResult | grep -o "<snapshot>.*</snapshot>")
+          timestamp=$(echo $snapshot | grep -o "<timestamp>.*</timestamp>" | grep -o "[0-9][^<]*")
+          buildNumber=$(echo $snapshot | grep -o "<buildNumber>.*</buildNumber>" | grep -o "[0-9][^<]*")
+          cd markdown
+          sed -i "s@\*\*Snapshot Version\*\*:.*@\*\*Snapshot Version\*\*: \*${{ steps.gitversion.outputs.version }}-SNAPSHOT\* ([[Download JAR file here|https://central.sonatype.com/repository/maven-snapshots/com/fazecast/jSerialComm/${{ steps.gitversion.outputs.version }}-SNAPSHOT/jSerialComm-${{ steps.gitversion.outputs.version }}-$timestamp-$buildNumber.jar]])@" Home.md
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "New SNAPSHOT version" && git push

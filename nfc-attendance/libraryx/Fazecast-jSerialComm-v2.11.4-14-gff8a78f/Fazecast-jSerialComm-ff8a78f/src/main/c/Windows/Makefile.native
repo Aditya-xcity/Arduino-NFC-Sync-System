@@ -1,0 +1,106 @@
+# Windows specific library variables
+COMPILE         = cl
+LINK            = link
+CFLAGS          = /c /O2 /GF /GL /MT /EHsc /fp:precise /J /nologo /TC /Zi
+LDFLAGS         = /DLL /LTCG /NOASSEMBLY /NOLOGO /INCREMENTAL:NO /DEBUG /OPT:REF,ICF,LBR
+INCLUDES        = /I"$(JDK_HOME)\include" /I"$(JDK_HOME)\include\win32"
+LIBRARIES       = Advapi32.lib SetupAPI.lib Shell32.lib
+DELETE          = @del /q /f
+RMDIR           = @rd /q /s
+MKDIR           = @md
+COPY            = @copy /y
+MOVE            = @move /y
+PRINT           = @echo
+
+# Ensure that JDK_HOME is defined
+!IFNDEF JDK_HOME
+!   IF [echo off && FOR /F "usebackq tokens=2 delims==" %i IN (`java -XshowSettings:properties -version 2^>^&1 ^| findstr "java.home"`) DO SET JDK_HOME=%~i && $(MAKE) /$(MAKEFLAGS) /nologo /f $(MAKEDIR)\Makefile.native && exit /b] == 0
+!   ENDIF
+!ELSE
+
+# Locate the Java JDK and the Visual Studio 2022 installation
+JDK_HOME        = $(strip $(JDK_HOME))
+VS_HOME         = "$(VS2022INSTALLDIR)\VC\Auxiliary\Build\vcvarsall.bat"
+
+# Java and resource definitions
+LIBRARY_NAME    = jSerialComm.dll
+BUILD_DIR       = ..\..\..\..\build
+RESOURCE_DIR    = ..\..\..\..\src\main\resources\Windows
+JAVA_SOURCE_DIR = ..\..\..\..\src\main\java\com\fazecast\jSerialComm
+FULL_CLASS      = com.fazecast.jSerialComm.SerialPort
+JAVA_CLASS_DIR  = $(BUILD_DIR)\com\fazecast\jSerialComm
+JNI_HEADER_FILE = com_fazecast_jSerialComm_SerialPort.h
+JNI_HEADER      = ..\$(JNI_HEADER_FILE)
+ANDROID_JAR     = ..\..\..\external/android.jar
+JAVA_CLASS      = $(JAVA_CLASS_DIR)\SerialPort.class
+JFLAGS          =  --release 6 -Xlint:-options
+JAVAC           = "$(JDK_HOME)\bin\javac"
+
+# Architecture-dependent library variables
+OBJECTSx86      = $(BUILD_DIR)\x86\SerialPort_Windows.obj $(BUILD_DIR)\x86\WindowsHelperFunctions.obj
+OBJECTSx86_64   = $(BUILD_DIR)\x86_64\SerialPort_Windows.obj $(BUILD_DIR)\x86_64\WindowsHelperFunctions.obj
+OBJECTSarmv7    = $(BUILD_DIR)\armv7\SerialPort_Windows.obj $(BUILD_DIR)\armv7\WindowsHelperFunctions.obj
+OBJECTSaarch64  = $(BUILD_DIR)\aarch64\SerialPort_Windows.obj $(BUILD_DIR)\aarch64\WindowsHelperFunctions.obj
+
+# Define phony and suffix rules
+.PHONY: all win32 win64 winarm winarm64
+.SUFFIXES:
+.SUFFIXES: .c .obj .class .java .h
+
+# Default build target
+all : win32 win64 winarm winarm64
+	$(DELETE) ..\*.h $(JNI_HEADER_FILE) *.pdb
+
+# Build architecture-specific Windows libraries
+win32 : $(BUILD_DIR)\x86 $(BUILD_DIR)\x86\$(LIBRARY_NAME)
+	$(COPY) $(BUILD_DIR)\x86\*.dll $(RESOURCE_DIR)\x86
+	$(RMDIR) $(BUILD_DIR)
+win64 : $(BUILD_DIR)\x86_64 $(BUILD_DIR)\x86_64\$(LIBRARY_NAME)
+	$(COPY) $(BUILD_DIR)\x86_64\*.dll $(RESOURCE_DIR)\x86_64
+	$(RMDIR) $(BUILD_DIR)
+winarm : $(BUILD_DIR)\armv7 $(BUILD_DIR)\armv7\$(LIBRARY_NAME)
+	$(COPY) $(BUILD_DIR)\armv7\*.dll $(RESOURCE_DIR)\armv7
+	$(RMDIR) $(BUILD_DIR)
+winarm64 : $(BUILD_DIR)\aarch64 $(BUILD_DIR)\aarch64\$(LIBRARY_NAME)
+	$(COPY) $(BUILD_DIR)\aarch64\*.dll $(RESOURCE_DIR)\aarch64
+	$(RMDIR) $(BUILD_DIR)
+	
+# Rule to create build directories
+$(BUILD_DIR)\x86 :
+	$(MKDIR) "$@"
+$(BUILD_DIR)\x86_64 :
+	$(MKDIR) "$@"
+$(BUILD_DIR)\armv7 :
+	$(MKDIR) "$@"
+$(BUILD_DIR)\aarch64 :
+	$(MKDIR) "$@"
+
+# Build rules for all libraries
+$(BUILD_DIR)\x86\$(LIBRARY_NAME) : $(JNI_HEADER) $(OBJECTSx86)
+	$(VS_HOME) x86 & $(LINK) $(LDFLAGS) /MACHINE:X86 /OUT:$@ $(OBJECTSx86) $(LIBRARIES)
+$(BUILD_DIR)\x86_64\$(LIBRARY_NAME) : $(JNI_HEADER) $(OBJECTSx86_64)
+	$(VS_HOME) x64 & $(LINK) $(LDFLAGS) /MACHINE:X64 /OUT:$@ $(OBJECTSx86_64) $(LIBRARIES)
+$(BUILD_DIR)\armv7\$(LIBRARY_NAME) : $(JNI_HEADER) $(OBJECTSarmv7)
+	$(VS_HOME) x86_arm & $(LINK) $(LDFLAGS) /MACHINE:ARM /OUT:$@ $(OBJECTSarmv7) $(LIBRARIES)
+$(BUILD_DIR)\aarch64\$(LIBRARY_NAME) : $(JNI_HEADER) $(OBJECTSaarch64)
+	$(VS_HOME) x64_arm64 & $(LINK) $(LDFLAGS) /MACHINE:ARM64 /OUT:$@ $(OBJECTSaarch64) $(LIBRARIES)
+
+# Suffix rules to get from *.c -> *.obj
+$(OBJECTSx86) :
+	$(VS_HOME) x86 & $(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
+$(OBJECTSx86_64) :
+	$(VS_HOME) x64 & $(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
+$(OBJECTSarmv7) :
+	$(VS_HOME) x86_arm & $(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
+$(OBJECTSaarch64) :
+	$(VS_HOME) x64_arm64 & $(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
+
+# Rule to build JNI header file
+$(JNI_HEADER) : $(JAVA_CLASS)
+	$(COPY) $@ .\
+
+# Suffix rule to get from *.java -> *.class
+$(JAVA_CLASS) :
+	$(JAVAC) $(JFLAGS) -d $(JAVA_CLASS_DIR)\..\..\.. -cp $(JAVA_SOURCE_DIR)\..\..\..:$(ANDROID_JAR) $(JAVA_SOURCE_DIR)\$(*B).java -h ..
+
+!ENDIF

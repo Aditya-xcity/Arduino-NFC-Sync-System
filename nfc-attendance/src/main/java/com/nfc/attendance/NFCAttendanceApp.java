@@ -1,15 +1,12 @@
 package com.nfc.attendance;
 
-import com.nfc.attendance.database.DatabaseInitializer;
-import com.nfc.attendance.database.DatabaseConnection;
-import com.nfc.attendance.model.Admin;
-import com.nfc.attendance.nfc.NFCCardReader;
-import com.nfc.attendance.nfc.ArduinoController;
-import com.nfc.attendance.controller.LoginController;
 import com.nfc.attendance.controller.DashboardController;
-import com.nfc.attendance.controller.StudentManagementController;
-import com.nfc.attendance.controller.SessionController;
-import com.nfc.attendance.controller.AttendanceController;
+import com.nfc.attendance.controller.LoginController;
+import com.nfc.attendance.database.DatabaseConnection;
+import com.nfc.attendance.database.DatabaseInitializer;
+import com.nfc.attendance.model.Admin;
+import com.nfc.attendance.nfc.ArduinoController;
+import com.nfc.attendance.nfc.NFCCardReader;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -35,6 +32,14 @@ public class NFCAttendanceApp extends Application {
         try {
             this.primaryStage = primaryStage;
 
+            // Always use COM11 for Arduino
+            com.nfc.attendance.nfc.ArduinoController.getInstance().setPortName("COM11");
+
+            configureSerialNativeRuntime();
+
+            // Isolate jSerialComm native extraction for this app to avoid stale/locked DLL conflicts.
+            System.setProperty("fazecast.jSerialComm.appid", "nfc-attendance-pro");
+
             // Initialize database and seed data
             System.out.println("Initializing database...");
             DatabaseInitializer.initializeDatabase();
@@ -49,6 +54,8 @@ public class NFCAttendanceApp extends Application {
             primaryStage.setHeight(700);
             primaryStage.setOnCloseRequest(event -> onApplicationExit());
             primaryStage.show();
+
+            runArduinoStartupSelfTest();
 
         } catch (Exception e) {
             System.err.println("Error starting application: " + e.getMessage());
@@ -159,6 +166,42 @@ public class NFCAttendanceApp extends Application {
         if (css != null) {
             scene.getStylesheets().add(css);
         }
+    }
+
+    /**
+     * Align architecture metadata on Windows x64 before native serial libraries initialize.
+     * This avoids ARM/native mismatch on some JDK/runtime combinations.
+     */
+    private void configureSerialNativeRuntime() {
+        String osName = System.getProperty("os.name", "").toLowerCase();
+        String processorArch = System.getenv("PROCESSOR_ARCHITECTURE");
+
+        if (osName.contains("win") && processorArch != null && processorArch.equalsIgnoreCase("AMD64")) {
+            System.setProperty("os.arch", "amd64");
+        }
+    }
+
+    /**
+     * Sends a startup beep command to Arduino in the background.
+     * This gives immediate feedback that serial communication is working.
+     */
+    private void runArduinoStartupSelfTest() {
+        Thread startupSignalThread = new Thread(() -> {
+            try {
+                // Give the UI a moment to stabilize before serial initialization.
+                Thread.sleep(500);
+                ArduinoController.getInstance().triggerScan();
+                System.out.println("[Startup] Arduino buzzer self-test signal sent.");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.err.println("[Startup] Arduino self-test interrupted.");
+            } catch (RuntimeException e) {
+                System.err.println("[Startup] Arduino self-test failed: " + e.getMessage());
+            }
+        }, "Arduino-Startup-SelfTest");
+
+        startupSignalThread.setDaemon(true);
+        startupSignalThread.start();
     }
 
     private void onApplicationExit() {

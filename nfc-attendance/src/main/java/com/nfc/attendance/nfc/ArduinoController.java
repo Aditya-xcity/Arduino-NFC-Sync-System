@@ -51,19 +51,28 @@ public class ArduinoController {
      * and silently drop unflushed data.
      */
     public void triggerScan() {
-        if (!connected) {
-            connect();
-        }
-        if (connected && serialPort != null) {
-            int written = serialPort.writeBytes(SIGNAL_SCAN, SIGNAL_SCAN.length);
-            if (written == SIGNAL_SCAN.length) {
-                System.out.println("[Arduino] Signal 'S' sent successfully.");
-            } else {
-                System.err.println("[Arduino] writeBytes returned " + written + " — expected 1. Reconnecting next attempt.");
-                connected = false;
+        try {
+            if (!connected) {
+                connect();
             }
-        } else {
-            System.err.println("[Arduino] triggerScan skipped — not connected.");
+            if (connected && serialPort != null) {
+                int written = serialPort.writeBytes(SIGNAL_SCAN, SIGNAL_SCAN.length);
+                if (written == SIGNAL_SCAN.length) {
+                    System.out.println("[Arduino] Signal 'S' sent successfully.");
+                } else {
+                    System.err.println("[Arduino] writeBytes returned " + written + " — expected 1. Reconnecting next attempt.");
+                    connected = false;
+                }
+            } else {
+                System.err.println("[Arduino] triggerScan skipped — not connected.");
+            }
+        } catch (Throwable t) {
+            System.err.println("[Arduino] Failed to send signal: " + t.getMessage());
+            if (serialPort != null) {
+                try { serialPort.closePort(); } catch (Exception ignored) {}
+            }
+            serialPort = null;
+                connected = false;
         }
     }
 

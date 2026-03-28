@@ -70,11 +70,11 @@
       <version>0.3.12</version>
     </dependency>
 
-    <!-- jSerialComm — Arduino serial communication -->
+    <!-- jSerialComm - Arduino serial communication -->
     <dependency>
       <groupId>com.fazecast</groupId>
       <artifactId>jSerialComm</artifactId>
-      <version>2.10.4</version>
+      <version>2.11.0</version>
     </dependency>
 
     <!-- JUnit Testing -->

@@ -91,3 +91,5 @@ data/reports/
 !/data/reports/.gitkeep
 data/photos/
 !/data/photos/.gitkeep
+*.lnk 
+Ico/ 

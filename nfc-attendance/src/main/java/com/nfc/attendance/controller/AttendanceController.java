@@ -1,5 +1,15 @@
 package com.nfc.attendance.controller;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.imageio.ImageIO;
+
+import com.github.sarxos.webcam.Webcam;
 import com.nfc.attendance.model.Attendance;
 import com.nfc.attendance.model.Session;
 import com.nfc.attendance.model.Student;
@@ -8,22 +18,22 @@ import com.nfc.attendance.nfc.NFCCardReader;
 import com.nfc.attendance.report.PDFReportGenerator;
 import com.nfc.attendance.service.AttendanceService;
 import com.nfc.attendance.service.SessionService;
+import com.nfc.attendance.service.StudentService;
 import com.nfc.attendance.util.FileUtil;
 
-import com.github.sarxos.webcam.Webcam;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Attendance Controller — MERGED
@@ -43,24 +53,76 @@ public class AttendanceController {
     @FXML private TableColumn<Attendance, String> photoColumn;
     @FXML private Label statusLabel;
     @FXML private ImageView webcamView;
+    @FXML private ComboBox<String> cameraSelector;
     @FXML private Button startScanButton;
     @FXML private Button stopScanButton;
     @FXML private ListView<String> attendanceList;
 
     private AttendanceService attendanceService;
     private SessionService sessionService;
+    private StudentService studentService;
     private int activeSessionId = -1;
     private ObservableList<Attendance> attendanceData;
     private final AtomicBoolean scanning = new AtomicBoolean(false);
+    private List<Webcam> availableWebcams = Collections.emptyList();
 
     @FXML
     public void initialize() {
         this.attendanceService = new AttendanceService();
         this.sessionService = new SessionService();
+        this.studentService = new StudentService();
         this.attendanceData = FXCollections.observableArrayList();
         setupTable();
+        loadAvailableCameras();
         updateDisplay();
         if (stopScanButton != null) stopScanButton.setDisable(true);
+    }
+
+    private void loadAvailableCameras() {
+        try {
+            availableWebcams = Webcam.getWebcams();
+            if (cameraSelector == null) {
+                return;
+            }
+
+            ObservableList<String> cameraNames = FXCollections.observableArrayList();
+            for (int i = 0; i < availableWebcams.size(); i++) {
+                Webcam webcam = availableWebcams.get(i);
+                cameraNames.add((i + 1) + ": " + webcam.getName());
+            }
+
+            cameraSelector.setItems(cameraNames);
+
+            if (!cameraNames.isEmpty()) {
+                cameraSelector.getSelectionModel().select(0);
+                statusLabel.setText("Camera ready: " + cameraNames.get(0));
+            } else {
+                statusLabel.setText("No camera detected");
+            }
+
+        } catch (RuntimeException e) {
+            availableWebcams = Collections.emptyList();
+            if (statusLabel != null) {
+                statusLabel.setText("Failed to load cameras: " + e.getMessage());
+            }
+        }
+    }
+
+    private Webcam getSelectedWebcam() {
+        if (availableWebcams == null || availableWebcams.isEmpty()) {
+            return null;
+        }
+
+        if (cameraSelector == null) {
+            return availableWebcams.get(0);
+        }
+
+        int selectedIndex = cameraSelector.getSelectionModel().getSelectedIndex();
+        if (selectedIndex < 0 || selectedIndex >= availableWebcams.size()) {
+            return availableWebcams.get(0);
+        }
+
+        return availableWebcams.get(selectedIndex);
     }
 
     private void setupTable() {
@@ -170,16 +232,16 @@ public class AttendanceController {
                 if (uid != null && !uid.isEmpty()) {
                     uid = uid.toUpperCase();
 
+                    // Always provide hardware feedback for any scanned card.
+                    ArduinoController.getInstance().triggerScan();
+
                     // Capture photo from webcam (from Main project)
-                    String photoPath = capturePhoto(uid);
+                    String photoPath = capturePhoto();
 
                     // Mark attendance via service (from Draft)
                     Student student = attendanceService.markAttendanceByNfcUid(uid, activeSessionId, photoPath);
 
                     if (student != null) {
-                        // Signal Arduino: blink red LED + buzzer beep
-                        ArduinoController.getInstance().triggerScan();
-
                         final String displayName = student.getName();
                         Platform.runLater(() -> {
                             if (attendanceList != null) {
@@ -191,8 +253,20 @@ public class AttendanceController {
                         });
                     } else {
                         final String finalUid = uid;
-                        Platform.runLater(() ->
-                                statusLabel.setText("Card scanned: " + finalUid + " (already marked or unknown)"));
+                        Student registeredStudent = studentService.getStudentByNfcUid(finalUid);
+                        Platform.runLater(() -> {
+                            if (registeredStudent == null) {
+                                statusLabel.setText("Warning: Unknown card detected");
+
+                                Alert alert = new Alert(Alert.AlertType.WARNING);
+                                alert.setTitle("Unknown NFC Card");
+                                alert.setHeaderText("Unknown card has been detected");
+                                alert.setContentText("Unknown card (UID: " + finalUid + ") has been detected. Please contact the admin to add you as a student.");
+                                alert.show();
+                            } else {
+                                statusLabel.setText("Card scanned: " + finalUid + " (attendance already marked)");
+                            }
+                        });
                     }
 
                     // Wait for card to be removed before scanning again
@@ -215,9 +289,9 @@ public class AttendanceController {
     /**
      * Captures a webcam photo — merged from NfcAttendanceSystem.capturePhoto()
      */
-    private String capturePhoto(String uid) {
+    private String capturePhoto() {
         try {
-            Webcam webcam = Webcam.getDefault();
+            Webcam webcam = getSelectedWebcam();
             if (webcam == null) return null;
 
             if (!webcam.isOpen()) webcam.open();
@@ -239,7 +313,7 @@ public class AttendanceController {
             webcam.close();
             return photoPath;
 
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             System.out.println("Camera Error: " + e.getMessage());
             return null;
         }

@@ -1,3 +1,23 @@
+# Ignore all images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.webp
+*.svg
+
+# Ignore all PDFs
+*.pdf
+
+# Ignore all Markdown files
+*.md
+
+# BUT keep README.md
+!README.md
+
+
+
 # Maven
 target/
 pom.xml.tag
@@ -91,5 +111,3 @@ data/reports/
 !/data/reports/.gitkeep
 data/photos/
 !/data/photos/.gitkeep
-*.lnk 
-Ico/ 
